@@ -16,6 +16,7 @@ for row in itemscsv:
 	if maximum == 0:
 		continue
 	res.append(maximum)
+itemsfile.close()
 print(len(res), " total phones scanned")
 
 sizes = [pow(2,i) for i in range(10)]
