@@ -1,4 +1,5 @@
 import csv
+import re
 from textblob import TextBlob
 
 def asinExtraction():
@@ -13,10 +14,8 @@ def asinExtraction():
     f.close()
     return asins
 
-def featureExtraction(asin):
+def featureExtraction(asin, csvReviews):
     #Open Reviews CSV
-    f = open('reviews.csv', newline='', encoding="utf8") 
-    csvReviews = csv.DictReader(f, delimiter= ',')
     
     #Variables for this function
     features = [["battery", "charge"],  ["camera", "photo"], ["storage"]]
@@ -48,36 +47,72 @@ def featureExtraction(asin):
     finalResult.append(asin)
     for j in range(3):
         if counter[j] == 0: #We can't divide by 0 (This means the feature wasn't mentioned for the phone)
-            finalResult.append("#")
+            finalResult.append('\0')
         else:
             average = sumPolarity[j]/counter[j]
             finalResult.append(average)
             
     return finalResult
         
+def featuresValues(asin, gsmfeatures):
+    featlist = []
+
+    for i in gsmfeatures:
+        if i['asin'] == asin:
+            #battery
+            battery = re.search(r'\d*(?=\smAh)',i['battery'])
+            battery = battery.group(0) if battery else '\0'
+            featlist.append(battery)
+            #camera
+            maxMP = 0.0
+            match1 = re.findall(r'\d*(?=\sMP)',i['main_camera_single'])
+            match2 = re.findall(r'\d*(?=\sMP)',i['main_camera_dual'])
+            match3 = re.findall(r'\d*(?=\sMP)',i['main_camera_triple'])
+            match4 = re.findall(r'\d*(?=\sMP)',i['main_camera_quad'])
+            match5 = re.findall(r'\d*(?=\sMP)',i['main_camera_five'])
+            for m in match1 + match2 + match3 + match4 + match5:
+                if m != '':
+                    if float(m) > maxMP:
+                        maxMP = float(m)
+            featlist.append(maxMP if maxMP != 0.0 else '\0')
+            #storage
+            featlist.append(int(i['memoryamazon']))
+    return featlist
 
 #MAIN
 asinValues = asinExtraction() #Extracts all the different phones found in GSMwithASIN.csv
 
-#Open Results CSV
-resultFile = open('results.csv', 'w', newline = '', encoding="utf8") #Empty CSV to input results
-csvResults = csv.writer(resultFile)
+#reading in whole csv for performance
+f = open('gsmwithasin.csv', newline='', encoding="utf8") 
+gsmfeatures = [i for i in csv.DictReader(f, delimiter= ',')] #list of dict
+f.close()
 
-#Write Header for results.csv
-fieldnames = ["asin", "battery", "camera", "storage"]
-csvResults.writerow(fieldnames)
+f = open('reviews.csv', newline='', encoding="utf8") 
+csvReviews = [i for i in csv.DictReader(f, delimiter= ',')] #list of dict
+f.close()
 
 #For each phone, we extract the average polarity values of each feature
 count = 0
+rowbuffer = []
 for i in asinValues:   
-    row = featureExtraction(i) 
-    csvResults.writerow(row)
+    row = featureExtraction(i,csvReviews) 
+    row.extend(featuresValues(i,gsmfeatures))
+    rowbuffer.append(row)
     print("Done with phone: ", count)
     count += 1
 
+#Open Results CSV
+resultFile = open('results.csv', 'w', newline = '', encoding="utf8") #Empty CSV to input results
+csvResults = csv.writer(resultFile)
+#Write Header for results.csv
+fieldnames = ["asin", "polarity-battery", "polarity-camera", "polarity-storage", "battery-mAh", "camera-MP", "storage-GB"]
+csvResults.writerow(fieldnames)
+#actual row writing
+csvResults.writerows(rowbuffer)
+
 resultFile.close()
 
-# def featuresValues(asin)
+
 
     
 

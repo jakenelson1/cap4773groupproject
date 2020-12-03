@@ -6,7 +6,7 @@ itemscsv = csv.DictReader(itemsfile, delimiter=',')
 gsmfile = open("gsm.csv", "r+")
 gsmcsv = csv.DictReader(gsmfile, delimiter=',')
 
-dupes = open("output.txt", "w+")
+# dupes = open("output.txt", "w+")
 outputcsv = open("gsmwithasin.csv", "w+")
 
 count = 0
@@ -24,6 +24,7 @@ fieldnames = []
 fieldnames = (list(phonedict[0].keys()))
 fieldnames.append('asin')
 gsmasin = csv.DictWriter(outputcsv, fieldnames)
+gsmasin.writeheader()
 
 for title in titles:
 	bestmatch = "\0"
@@ -38,7 +39,7 @@ for title in titles:
 				matchrow['asin']=title[0]
 				count += 1
 	if bestmatch != "\0":
-		dupes.write(title[1] + " == " + bestmatch + '\n')
+		# dupes.write(title[1] + " == " + bestmatch + '\n')
 		gsmasin.writerow(matchrow)
 
 print (count)
