@@ -3,6 +3,11 @@ import re
 from textblob import TextBlob
 
 def asinExtraction():
+    """
+    Returns a list of asin numbers in the database
+
+    Requires: gsmwithasin.csv in the working directory
+    """
     f = open('gsmwithasin.csv', newline='', encoding="utf8") #CSV Contains Reviews
     csvGSMasin = csv.DictReader(f, delimiter= ',')
     asins = []
@@ -15,6 +20,13 @@ def asinExtraction():
     return asins
 
 def featureExtraction(asin, csvReviews):
+    """
+    Returns a list of polarity values for given asin
+    
+    asin: the asin to be scanned
+
+    csvReviews: a list of dict obejct containing 'asin' and 'body' fields 
+    """
     #Open Reviews CSV
     
     #Variables for this function
@@ -55,6 +67,14 @@ def featureExtraction(asin, csvReviews):
     return finalResult
         
 def featuresValues(asin, gsmfeatures):
+    """
+    Returns a list of qunatitative values for given asin
+
+    asin: the asin to be scanned
+
+    gsmfeatures: a list of dict obejct containing 'asin' and 'memoryamazon' fields 
+    
+    """
     featlist = []
 
     for i in gsmfeatures:
